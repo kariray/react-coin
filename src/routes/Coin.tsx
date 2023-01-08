@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from "react-helmet";
 import { useLocation, useParams, useMatch } from "react-router";
 import { Routes, Route, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -17,13 +18,20 @@ const Container = styled.div`
 const Header = styled.header`
   height: 10vh;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
 `;
 
 const Title = styled.h1`
   color: ${(props) => props.theme.accentColor};
   font-size: 48px;
+`;
+const BackBtn = styled.span`
+  color: ${(props) => props.theme.accentColor};
+  font-size: 48px;
+  &:hover {
+    color: skyblue;
+  }
 `;
 
 const Loader = styled.span`
@@ -144,14 +152,24 @@ function Coin() {
   );
   const { isLoading: tickersLoading, data: tickersData } = useQuery<PriceData>(
     ["tickers", coinId],
-    () => fetchCoinTickers(coinId!)
+    () => fetchCoinTickers(coinId!),
+    {
+      refetchInterval: 5000,
+    }
   );
 
   const loading = infoLoading || tickersLoading;
   return (
     <Container>
+      <Helmet>
+        <title>{infoData?.name}</title>
+      </Helmet>
       <Header>
+        <BackBtn>
+          <Link to="/">&larr;</Link>
+        </BackBtn>
         <Title>{infoData?.name}</Title>
+        <span></span>
       </Header>
       {loading ? (
         <Loader>Loading...</Loader>
@@ -167,8 +185,8 @@ function Coin() {
               <span>${infoData?.symbol}</span>
             </OverviewItem>
             <OverviewItem>
-              <span>Open Source:</span>
-              <span>{infoData?.open_source ? "Yes" : "No"}</span>
+              <span>Price:</span>
+              <span>${tickersData?.quotes.USD.price.toFixed(3)}</span>
             </OverviewItem>
           </Overview>
           <Description>{infoData?.description}</Description>
@@ -194,7 +212,10 @@ function Coin() {
 
           <Routes>
             <Route path="price" element={<Price />}></Route>
-            <Route path="chart" element={<Chart />}></Route>
+            <Route
+              path="chart"
+              element={<Chart coinId={coinId as string} />}
+            ></Route>
           </Routes>
         </>
       )}
